@@ -1,7 +1,6 @@
 <?php
 include '../config.php';
 
-// Ambil data buku dengan stok <= 20 (karena di atas itu dianggap aman)
 $query = "
   SELECT b.nama_buku, p.nama AS penerbit, b.stok
   FROM buku b

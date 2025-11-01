@@ -1,58 +1,44 @@
-/* --- Umum --- */
 body {
-  background-color: #f9fafb;
+  background: #f7f9fc;
   font-family: "Poppins", sans-serif;
-  margin-bottom: 80px; /* agar konten tidak tertutup footer */
+  color: #333;
 }
 
-/* --- Navbar --- */
 .navbar {
-  background-color: #0d6efd;
+  background: linear-gradient(90deg, #007bff, #0056b3);
 }
 
-.navbar-brand,
-.nav-link {
-  color: white !important;
-  transition: 0.3s;
-}
-
-.navbar-brand:hover,
-.nav-link:hover {
-  text-decoration: underline;
-  opacity: 0.9;
-}
-
-/* --- Card dan Tabel --- */
 .card {
-  border-radius: 15px;
-  transition: transform 0.3s ease;
+  border: none;
+  border-radius: 20px;
+  background: #ffffff;
 }
 
-.card:hover {
-  transform: scale(1.01);
+.table thead {
+  border-radius: 12px;
 }
 
-.table {
-  border-radius: 10px;
-  overflow: hidden;
+.table th {
+  background-color: #007bff !important;
+  color: white !important;
+  font-weight: 600;
 }
 
-/* --- Footer --- */
+.table-hover tbody tr:hover {
+  background-color: #e9f4ff;
+  transition: background-color 0.3s ease;
+}
+
 .footer {
-  background-color: #0d6efd;
+  background: linear-gradient(90deg, #007bff, #0056b3);
   color: white;
-  text-align: center;
-  padding: 12px 0;
-  width: 100%;
-  box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.1);
   position: fixed;
   bottom: 0;
-  left: 0;
+  width: 100%;
 }
 
-/* --- Animasi --- */
 .fade-in {
-  animation: fadeIn 0.8s ease-in-out;
+  animation: fadeIn 0.6s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -64,29 +50,4 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* --- Tab Navigasi (Data Buku & Penerbit) --- */
-.nav-tabs .nav-link {
-  color: black !important; /* teks tab default hitam */
-  font-weight: 500;
-  background-color: #f1f3f5; /* sedikit abu muda */
-  border: 1px solid #dee2e6;
-  margin-right: 4px;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
-  transition: all 0.3s ease;
-}
-
-.nav-tabs .nav-link:hover {
-  background-color: #e9ecef; /* efek hover halus */
-  color: #000 !important;
-}
-
-.nav-tabs .nav-link.active {
-  background-color: #ffffff !important; /* tab aktif putih bersih */
-  border-color: #dee2e6 #dee2e6 #fff;
-  color: black !important;
-  font-weight: 600;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
 }
