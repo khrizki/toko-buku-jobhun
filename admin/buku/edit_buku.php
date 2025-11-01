@@ -1,7 +1,7 @@
 <?php
 include '../../config.php';
 
-// Pastikan ada ID buku
+// Pastikan ada ID buku yang dikirim
 if (!isset($_GET['id'])) {
     header("Location: ../admin.php");
     exit;
@@ -9,21 +9,58 @@ if (!isset($_GET['id'])) {
 
 $id_buku = $_GET['id'];
 
-// Ambil data buku
-$stmt = $koneksi->prepare("SELECT * FROM buku WHERE id_buku = ?");
-$stmt->bind_param("i", $id_buku);
-$stmt->execute();
-$result = $stmt->get_result();
-$data = $result->fetch_assoc();
+// Ambil data buku berdasarkan ID
+$query = "SELECT * FROM buku WHERE id_buku = '$id_buku'";
+$result = mysqli_query($koneksi, $query);
+$data = mysqli_fetch_assoc($result);
 
-// Jika tidak ditemukan
+// Jika data tidak ditemukan
 if (!$data) {
     echo "<script>alert('Data buku tidak ditemukan!'); window.location='../admin.php';</script>";
     exit;
 }
 
-// Ambil daftar penerbit
-$penerbit = $koneksi->query("SELECT * FROM penerbit");
+// Ambil daftar penerbit untuk dropdown
+$penerbit = mysqli_query($koneksi, "SELECT * FROM penerbit");
+
+// Proses update data buku
+if (isset($_POST['update'])) {
+    $id_buku_baru = trim($_POST['id_buku']);
+    $kategori = trim($_POST['kategori']);
+    $nama_buku = trim($_POST['nama_buku']);
+    $harga = trim($_POST['harga']);
+    $stok = trim($_POST['stok']);
+    $id_penerbit = trim($_POST['id_penerbit']);
+
+    // Cek apakah ID buku baru sudah digunakan oleh buku lain
+    $cek_duplikat = mysqli_query($koneksi, "SELECT id_buku FROM buku WHERE id_buku = '$id_buku_baru' AND id_buku != '$id_buku'");
+    if (mysqli_num_rows($cek_duplikat) > 0) {
+        echo "<script>
+                alert('❌ ID Buku sudah digunakan oleh buku lain! Gunakan ID yang berbeda.');
+                window.history.back();
+              </script>";
+        exit;
+    }
+
+    // Update data buku
+    $update = "UPDATE buku 
+               SET id_buku='$id_buku_baru',
+                   kategori='$kategori', 
+                   nama_buku='$nama_buku', 
+                   harga='$harga', 
+                   stok='$stok', 
+                   id_penerbit='$id_penerbit' 
+               WHERE id_buku='$id_buku'";
+
+    if (mysqli_query($koneksi, $update)) {
+        echo "<script>
+                alert('✅ Data buku berhasil diperbarui!');
+                window.location='../admin.php';
+              </script>";
+    } else {
+        echo "<script>alert('Gagal memperbarui data buku!');</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -49,11 +86,12 @@ $penerbit = $koneksi->query("SELECT * FROM penerbit");
     <div class="card shadow-lg p-4">
         <h3 class="text-center text-primary fw-bold mb-4">Edit Data Buku</h3>
 
-        <!-- Alert -->
-        <div id="alert-container"></div>
-
-        <form id="editForm">
-            <input type="hidden" name="id_buku" value="<?= htmlspecialchars($data['id_buku']) ?>">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">ID Buku</label>
+                <input type="text" name="id_buku" class="form-control" value="<?= htmlspecialchars($data['id_buku']) ?>" required>
+                <small class="text-muted">Pastikan ID buku tidak sama dengan buku lain.</small>
+            </div>
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Kategori</label>
@@ -67,18 +105,18 @@ $penerbit = $koneksi->query("SELECT * FROM penerbit");
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Harga</label>
-                <input type="number" name="harga" class="form-control" value="<?= htmlspecialchars($data['harga']) ?>" required>
+                <input type="number" name="harga" class="form-control" value="<?= htmlspecialchars($data['harga']) ?>" required min="0">
             </div>
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Stok</label>
-                <input type="number" name="stok" class="form-control" value="<?= htmlspecialchars($data['stok']) ?>" required>
+                <input type="number" name="stok" class="form-control" value="<?= htmlspecialchars($data['stok']) ?>" required min="1">
             </div>
 
             <div class="mb-3">
                 <label class="form-label fw-semibold">Penerbit</label>
                 <select name="id_penerbit" class="form-select" required>
-                    <?php while ($p = $penerbit->fetch_assoc()): ?>
+                    <?php while ($p = mysqli_fetch_assoc($penerbit)): ?>
                         <option value="<?= $p['id_penerbit'] ?>" <?= ($p['id_penerbit'] == $data['id_penerbit']) ? 'selected' : '' ?>>
                             <?= htmlspecialchars($p['nama']) ?>
                         </option>
@@ -87,7 +125,7 @@ $penerbit = $koneksi->query("SELECT * FROM penerbit");
             </div>
 
             <div class="text-center mt-4">
-                <button type="submit" class="btn btn-primary px-4">💾 Simpan Perubahan</button>
+                <button type="submit" name="update" class="btn btn-primary px-4">💾 Simpan Perubahan</button>
                 <a href="../admin.php" class="btn btn-secondary px-4">Kembali</a>
             </div>
         </form>
@@ -102,37 +140,5 @@ $penerbit = $koneksi->query("SELECT * FROM penerbit");
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-// Tangkap form dan kirim lewat JSON
-document.getElementById('editForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
-
-    const alertBox = document.getElementById('alert-container');
-    alertBox.innerHTML = ''; // reset alert
-
-    try {
-        const res = await fetch('update_buku_api.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        const result = await res.json();
-
-        if (result.success) {
-            alertBox.innerHTML = `<div class="alert alert-success">✅ ${result.message}</div>`;
-        } else {
-            alertBox.innerHTML = `<div class="alert alert-danger">❌ ${result.message}</div>`;
-        }
-    } catch (error) {
-        alertBox.innerHTML = `<div class="alert alert-danger">⚠️ Terjadi kesalahan: ${error.message}</div>`;
-    }
-});
-</script>
-
 </body>
 </html>

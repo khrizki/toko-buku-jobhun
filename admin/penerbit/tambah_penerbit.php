@@ -1,15 +1,32 @@
 <?php
 include '../../config.php';
 
-if (isset($_POST['simpan'])) {
-  $id = $_POST['id_penerbit'];
-  $nama = $_POST['nama'];
-  $alamat = $_POST['alamat'];
-  $kota = $_POST['kota'];
-  $telepon = $_POST['telepon'];
+$error = '';
+$success = '';
 
-  mysqli_query($koneksi, "INSERT INTO penerbit VALUES('$id','$nama','$alamat','$kota','$telepon')");
-  header("Location: ../admin.php");
+if (isset($_POST['simpan'])) {
+  $id = mysqli_real_escape_string($koneksi, $_POST['id_penerbit']);
+  $nama = mysqli_real_escape_string($koneksi, $_POST['nama']);
+  $alamat = mysqli_real_escape_string($koneksi, $_POST['alamat']);
+  $kota = mysqli_real_escape_string($koneksi, $_POST['kota']);
+  $telepon = mysqli_real_escape_string($koneksi, $_POST['telepon']);
+
+  // Cek apakah ID sudah ada
+  $cek = mysqli_query($koneksi, "SELECT * FROM penerbit WHERE id_penerbit = '$id'");
+  if (mysqli_num_rows($cek) > 0) {
+    $error = "ID Penerbit <b>$id</b> sudah digunakan!";
+  } else {
+    // Insert data baru
+    $query = "INSERT INTO penerbit (id_penerbit, nama, alamat, kota, telepon)
+              VALUES ('$id', '$nama', '$alamat', '$kota', '$telepon')";
+    if (mysqli_query($koneksi, $query)) {
+      $success = "Data penerbit berhasil disimpan!";
+      // Redirect setelah 2 detik
+      header("refresh:2; url=../admin.php");
+    } else {
+      $error = "Terjadi kesalahan: " . mysqli_error($koneksi);
+    }
+  }
 }
 ?>
 
@@ -31,7 +48,6 @@ if (isset($_POST['simpan'])) {
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
-    
   </div>
 </nav>
 
@@ -40,6 +56,12 @@ if (isset($_POST['simpan'])) {
   <h3 class="text-center text-primary fw-bold mb-4">Tambah Penerbit</h3>
 
   <div class="card shadow-sm p-4">
+    <?php if ($error): ?>
+      <div class="alert alert-danger"><?= $error; ?></div>
+    <?php elseif ($success): ?>
+      <div class="alert alert-success"><?= $success; ?></div>
+    <?php endif; ?>
+
     <form method="POST">
       <div class="mb-3">
         <label>ID Penerbit</label>

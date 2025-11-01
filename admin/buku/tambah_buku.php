@@ -3,18 +3,38 @@ include '../../config.php';
 
 // proses simpan data
 if (isset($_POST['simpan'])) {
-  $id = $_POST['id_buku'];
-  $kategori = $_POST['kategori'];
-  $nama = $_POST['nama_buku'];
-  $harga = $_POST['harga'];
-  $stok = $_POST['stok'];
-  $id_penerbit = $_POST['id_penerbit'];
+  $id = trim($_POST['id_buku']);
+  $kategori = trim($_POST['kategori']);
+  $nama = trim($_POST['nama_buku']);
+  $harga = trim($_POST['harga']);
+  $stok = trim($_POST['stok']);
+  $id_penerbit = trim($_POST['id_penerbit']);
 
-  mysqli_query($koneksi, "INSERT INTO buku VALUES('$id','$kategori','$nama','$harga','$stok','$id_penerbit')");
-  echo "<script>
-          localStorage.setItem('suksesTambah', 'true');
-          window.location.href = '../admin.php';
-        </script>";
+  // Cek apakah ID buku sudah ada
+  $cek_id = mysqli_query($koneksi, "SELECT id_buku FROM buku WHERE id_buku = '$id'");
+  if (mysqli_num_rows($cek_id) > 0) {
+    echo "<script>
+            alert('❌ ID Buku sudah ada! Gunakan ID lain.');
+            window.history.back();
+          </script>";
+    exit;
+  }
+
+  // Simpan data baru
+  $query = "INSERT INTO buku (id_buku, kategori, nama_buku, harga, stok, id_penerbit)
+            VALUES ('$id', '$kategori', '$nama', '$harga', '$stok', '$id_penerbit')";
+
+  if (mysqli_query($koneksi, $query)) {
+    echo "<script>
+            localStorage.setItem('suksesTambah', 'true');
+            window.location.href = '../admin.php';
+          </script>";
+  } else {
+    echo "<script>
+            alert('Terjadi kesalahan saat menyimpan data!');
+            window.history.back();
+          </script>";
+  }
   exit;
 }
 
@@ -27,7 +47,7 @@ $penerbit = mysqli_query($koneksi, "SELECT * FROM penerbit");
   <meta charset="UTF-8">
   <title>Tambah Buku | UNI Bookstore</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -91,7 +111,7 @@ $penerbit = mysqli_query($koneksi, "SELECT * FROM penerbit");
 
 <!-- KONTEN -->
 <div class="container form-container mt-5 pt-4">
-  <div class="card shadow-lg p-4 col-lg-7 col-md-9 col-sm-12 animate__animated animate__fadeInUp">
+  <div class="card shadow-lg p-4 col-lg-7 col-md-9 col-sm-12">
     <h4 class="text-center text-primary mb-4 fw-semibold">Tambah Buku</h4>
     <form method="POST" id="formTambah">
       <div class="row g-3">
